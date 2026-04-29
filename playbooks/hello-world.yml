@@ -1,6 +1,6 @@
 ---
 - name: Hello World - Verificar conectividad a nodos
-  hosts: all
+  hosts: all:!localhost
   gather_facts: yes
   become: yes
 

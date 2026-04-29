@@ -1,6 +1,6 @@
 ---
 - name: Reaccionar a evento webhook
-  hosts: "{{ target_host | default('all') }}"
+  hosts: "{{ target_host | default('all:!localhost') }}"
   gather_facts: yes
   become: yes
 
