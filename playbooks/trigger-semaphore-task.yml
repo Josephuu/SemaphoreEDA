@@ -1,6 +1,6 @@
 ---
 - name: Disparar Task en SemaphoreUI via API
-  hosts: localhost
+  hosts: eda
   gather_facts: no
 
   vars:
