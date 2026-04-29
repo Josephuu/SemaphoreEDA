@@ -5,7 +5,7 @@
 
   vars:
     semaphore_host: "http://semaphore:3000"
-    semaphore_api_token: "jkowkze28c9gwbednfrtcjbm--usvswt3hiiflecu4o="
+    semaphore_api_token: "{{ lookup('env', 'SEMAPHORE_API_TOKEN') }}"
     semaphore_project_id: 1
     semaphore_template_id: 1
 
