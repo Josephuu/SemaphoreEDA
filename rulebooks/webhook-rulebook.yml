@@ -1,6 +1,6 @@
 ---
-- name: Escuchar webhooks y disparar playbooks
-  hosts: all
+- name: Escuchar webhooks y disparar tasks en SemaphoreUI
+  hosts: localhost
 
   sources:
     - ansible.eda.webhook:
@@ -8,24 +8,22 @@
         port: 5000
 
   rules:
-    - name: Evento genérico recibido
+    - name: Disparar Hello Ansible en SemaphoreUI
       condition: event.payload is defined
       action:
         run_playbook:
-          name: playbooks/react-to-event.yml
+          name: playbooks/trigger-semaphore-task.yml
           extra_vars:
-            target_host: "{{ event.payload.target | default('all') }}"
             event_message: "{{ event.payload.message | default('Webhook recibido') }}"
             event_action: "{{ event.payload.action | default('info') }}"
-            event_payload: "{{ event.payload }}"
+            event_target: "{{ event.payload.target | default('all') }}"
 
-    - name: Evento de alerta crítica
+    - name: Disparar con prioridad critica
       condition: event.payload.priority is defined and event.payload.priority == "critical"
       action:
         run_playbook:
-          name: playbooks/react-to-event.yml
+          name: playbooks/trigger-semaphore-task.yml
           extra_vars:
-            target_host: "{{ event.payload.target | default('all') }}"
-            event_message: "ALERTA CRÍTICA: {{ event.payload.message }}"
+            event_message: "ALERTA CRITICA: {{ event.payload.message | default('') }}"
             event_action: "{{ event.payload.action | default('alert') }}"
-            event_payload: "{{ event.payload }}"
+            event_target: "{{ event.payload.target | default('all') }}"

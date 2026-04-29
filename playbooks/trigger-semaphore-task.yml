@@ -1,0 +1,48 @@
+---
+- name: Disparar Task en SemaphoreUI via API
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    semaphore_host: "http://semaphore:3000"
+    semaphore_api_token: "jkowkze28c9gwbednfrtcjbm--usvswt3hiiflecu4o="
+    semaphore_project_id: 1
+    semaphore_template_id: 1
+
+  tasks:
+    - name: Mostrar informacion del evento recibido
+      ansible.builtin.debug:
+        msg: |
+          ========================================
+          WEBHOOK RECIBIDO - DISPARANDO SEMAPHORE
+          ========================================
+          Mensaje: {{ event_message | default('N/A') }}
+          Accion: {{ event_action | default('N/A') }}
+          Target: {{ event_target | default('all') }}
+          Timestamp: {{ ansible_date_time.iso8601 | default(now()) }}
+          ========================================
+
+    - name: Llamar a la API de Semaphore para ejecutar template
+      ansible.builtin.uri:
+        url: "{{ semaphore_host }}/api/project/{{ semaphore_project_id }}/tasks"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ semaphore_api_token }}"
+          Content-Type: "application/json"
+          Accept: "application/json"
+        body:
+          template_id: "{{ semaphore_template_id }}"
+        body_format: json
+        status_code:
+          - 200
+          - 201
+      register: api_response
+
+    - name: Mostrar respuesta de la API
+      ansible.builtin.debug:
+        msg: |
+          Task disparado exitosamente!
+          Task ID: {{ api_response.json.id | default('N/A') }}
+          Status: {{ api_response.json.status | default('N/A') }}
+          Template: {{ api_response.json.tpl_alias | default('N/A') }}
+          URL: {{ semaphore_host }}/project/{{ semaphore_project_id }}/history
