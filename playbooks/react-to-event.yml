@@ -1,0 +1,52 @@
+---
+- name: Reaccionar a evento webhook
+  hosts: "{{ target_host | default('all') }}"
+  gather_facts: yes
+  become: yes
+
+  vars:
+    event_message: "{{ event_message | default('Sin mensaje') }}"
+    event_action: "{{ event_action | default('info') }}"
+
+  tasks:
+    - name: Mostrar información del evento recibido
+      ansible.builtin.debug:
+        msg: |
+          ========================================
+          EVENTO RECIBIDO
+          ========================================
+          Host objetivo: {{ inventory_hostname }}
+          Mensaje: {{ event_message }}
+          Acción: {{ event_action }}
+          Timestamp: {{ ansible_date_time.iso8601 }}
+          ========================================
+
+    - name: Crear archivo de log del evento
+      ansible.builtin.copy:
+        content: |
+          [{{ ansible_date_time.iso8601 }}] Evento en {{ inventory_hostname }}
+          Mensaje: {{ event_message }}
+          Acción: {{ event_action }}
+          Payload completo: {{ event_payload | default('N/A') }}
+        dest: /tmp/ansible-event.log
+        mode: '0644'
+
+    - name: Ejecutar acción según el tipo de evento
+      ansible.builtin.debug:
+        msg: "Ejecutando acción: {{ event_action }} en {{ inventory_hostname }}"
+
+    - name: Si la acción es 'update', actualizar paquetes
+      ansible.builtin.apt:
+        update_cache: yes
+      when: event_action == 'update'
+
+    - name: Si la acción es 'restart-nginx', reiniciar nginx (simulado)
+      ansible.builtin.debug:
+        msg: "Simulando: systemctl restart nginx"
+      when: event_action == 'restart-nginx'
+
+    - name: Si la acción es 'cleanup', limpiar /tmp
+      ansible.builtin.file:
+        path: /tmp/ansible-event.log
+        state: absent
+      when: event_action == 'cleanup'

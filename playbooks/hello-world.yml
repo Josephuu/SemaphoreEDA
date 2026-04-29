@@ -1,0 +1,32 @@
+---
+- name: Hello World - Verificar conectividad a nodos
+  hosts: all
+  gather_facts: yes
+  become: yes
+
+  tasks:
+    - name: Mostrar información del host
+      ansible.builtin.debug:
+        msg: |
+          Host: {{ inventory_hostname }}
+          IP: {{ ansible_default_ipv4.address | default('N/A') }}
+          Distribución: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Kernel: {{ ansible_kernel }}
+
+    - name: Verificar que podemos ejecutar comandos como root
+      ansible.builtin.command: whoami
+      register: whoami_result
+      changed_when: false
+
+    - name: Mostrar resultado
+      ansible.builtin.debug:
+        msg: "Usuario efectivo: {{ whoami_result.stdout }}"
+
+    - name: Verificar espacio en disco
+      ansible.builtin.command: df -h /
+      register: disk_space
+      changed_when: false
+
+    - name: Mostrar espacio en disco
+      ansible.builtin.debug:
+        msg: "{{ disk_space.stdout_lines }}"

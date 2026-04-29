@@ -1,0 +1,31 @@
+---
+- name: Escuchar webhooks y disparar playbooks
+  hosts: all
+
+  sources:
+    - ansible.eda.webhook:
+        host: 0.0.0.0
+        port: 5000
+
+  rules:
+    - name: Evento genérico recibido
+      condition: event.payload is defined
+      action:
+        run_playbook:
+          name: playbooks/react-to-event.yml
+          extra_vars:
+            target_host: "{{ event.payload.target | default('all') }}"
+            event_message: "{{ event.payload.message | default('Webhook recibido') }}"
+            event_action: "{{ event.payload.action | default('info') }}"
+            event_payload: "{{ event.payload }}"
+
+    - name: Evento de alerta crítica
+      condition: event.payload.priority is defined and event.payload.priority == "critical"
+      action:
+        run_playbook:
+          name: playbooks/react-to-event.yml
+          extra_vars:
+            target_host: "{{ event.payload.target | default('all') }}"
+            event_message: "ALERTA CRÍTICA: {{ event.payload.message }}"
+            event_action: "{{ event.payload.action | default('alert') }}"
+            event_payload: "{{ event.payload }}"
